@@ -5,17 +5,15 @@ using UnityEngine;
 public class Enemy : MonoBehaviour
 {
     public int health;
-    public float speed;
     [SerializeField] private ParticleSystem particleSystem = default;
     private SpriteRenderer spriteRenderer;
     private Collider2D _collider2D;
-
+    [SerializeField] private ParticleSystem fireParticle;
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         _collider2D = GetComponent<Collider2D>();
-        // Initialize health if needed
-        // health = 100;
+        
     }
 
     void Update()
@@ -26,7 +24,7 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(int damage)
     {
         health -= damage;
-        Debug.Log("Damage taken. Current health: " + health);
+        Debug.Log("Enemey took damage. Current health: " + health);
 
         if (health <= 0)
         {
@@ -36,7 +34,11 @@ public class Enemy : MonoBehaviour
 
     private IEnumerator Die()
     {
-        // Play particle effect
+        // Play particle 
+        if (fireParticle != null)
+        {
+            fireParticle.Stop();
+        }
         particleSystem.Play();
         _collider2D.enabled = false;
         // Disable SpriteRenderer

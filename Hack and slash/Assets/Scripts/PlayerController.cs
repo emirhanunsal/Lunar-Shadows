@@ -1,3 +1,4 @@
+using System;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Timeline;
@@ -6,10 +7,14 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] private float speed = 5f;
     [SerializeField] private float jumpForce = 10f;
+    [SerializeField] private float dashForce = 20f;
+    [SerializeField] private float dashCooldown = 2f;
+    private float lastDashTime;
+    
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
     private Animator animator;
-
+    
     private bool isGrounded;
     private float originalGravityScale;
 
@@ -26,6 +31,10 @@ public class PlayerController : MonoBehaviour
         Move();
         Jump();
         UpdateAnimator();
+        if (Time.time >= lastDashTime + dashCooldown)
+        {
+            Dash();
+        }
         
     }
 
@@ -57,8 +66,25 @@ public class PlayerController : MonoBehaviour
             animator.SetBool("isJumping", true); // isJumping booleanını ayarla
         }
     }
-    
-    
+
+    void Dash()
+    {
+        if (Input.GetButtonDown("Dash"))
+        {
+            float horizontalInput = Input.GetAxis("Horizontal");
+
+            if (horizontalInput != 0)
+            {
+                Vector2 dashDirection = new Vector2(horizontalInput, 0).normalized;
+                rb.AddForce(dashDirection * dashForce, ForceMode2D.Impulse);
+                lastDashTime = Time.time; // Update the last dash time
+                Debug.Log("Dash");
+            }
+        }
+    }
+
+
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Ground"))

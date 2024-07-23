@@ -4,15 +4,17 @@ using UnityEngine;
 
 public class EnemyMahmut : MonoBehaviour
 {
-    [SerializeField] private float hitDistance = 1.5f;
+    [SerializeField] private float hitRadius = 1.5f;
     [SerializeField] private int damage = 10;
     [SerializeField] private float timeBetweenHits = 2f;
     [SerializeField] private float moveSpeed = 2f; // Speed at which the enemy moves towards the player
+    [SerializeField] private LayerMask playerLayer; // Layer mask for the player
+    [SerializeField] private Transform attackCenter; // Center of the attack area
     private float timeSinceLastHit = 0f;
 
     private Transform player;
-    private bool playerInRange = false;
     private bool isAttacking = false;
+    private bool facingRight = false; // Indicates the initial facing direction
 
     private Animator animator;
     private SpriteRenderer spriteRenderer;
@@ -30,8 +32,9 @@ public class EnemyMahmut : MonoBehaviour
         // Update the time since the last hit
         timeSinceLastHit += Time.deltaTime;
 
-        // Check if the player is within hit distance
-        playerInRange = Vector2.Distance(transform.position, player.position) <= hitDistance;
+        // Check if the player is within hit radius using a physics overlap circle
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(attackCenter.position, hitRadius, playerLayer);
+        bool playerInRange = hitColliders.Length > 0;
 
         // If the player is in range and the enemy can attack (time since last hit is greater than time between hits)
         if (playerInRange && timeSinceLastHit >= timeBetweenHits && !isAttacking)
@@ -56,14 +59,27 @@ public class EnemyMahmut : MonoBehaviour
         transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
 
         // Flip sprite based on the movement direction
-        if (transform.position.x < player.position.x)
+        if (transform.position.x < player.position.x && !facingRight)
         {
-            spriteRenderer.flipX = true;
+            Flip();
         }
-        else if (transform.position.x > player.position.x)
+        else if (transform.position.x > player.position.x && facingRight)
         {
-            spriteRenderer.flipX = false;
+            Flip();
         }
+    }
+
+    void Flip()
+    {
+        facingRight = !facingRight;
+
+        // Flip the sprite
+        spriteRenderer.flipX = !spriteRenderer.flipX;
+
+        // Adjust the attackCenter's local position to flip it
+        Vector3 localScale = attackCenter.localPosition;
+        localScale.x *= -1;
+        attackCenter.localPosition = localScale;
     }
 
     void Attack()
@@ -83,16 +99,37 @@ public class EnemyMahmut : MonoBehaviour
         // Wait for the animation to start (adjust the delay based on your animation length)
         yield return new WaitForSeconds(0.5f);
 
-        // Apply damage to the player
-        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
-        if (playerHealth != null)
+        // Check if the player is still in the attack area
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(attackCenter.position, hitRadius, playerLayer);
+        bool playerInRange = hitColliders.Length > 0;
+
+        if (playerInRange)
         {
-            playerHealth.TakeDamage(damage);
-            Debug.Log("Enemy attacked the player!");
+            // Apply damage to the player
+            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                playerHealth.TakeDamage(damage);
+                Debug.Log("Enemy attacked the player!");
+            }
+        }
+        else
+        {
+            Debug.Log("Player moved out of range, attack missed.");
         }
 
         // Reset the time since the last hit and allow movement again
         timeSinceLastHit = 0f;
         isAttacking = false;
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        if (attackCenter != null)
+        {
+            // Draw the attack radius in the editor for visualization
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(attackCenter.position, hitRadius);
+        }
     }
 }
