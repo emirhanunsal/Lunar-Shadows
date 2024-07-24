@@ -69,44 +69,44 @@ public class PlayerController : MonoBehaviour
     }
 
     private IEnumerator Dash()
+{
+    if (Input.GetButtonDown("Dash") && canDash)
     {
-        if (Input.GetButtonDown("Dash") && canDash)
+        canDash = false;
+        isDashing = true;
+        
+        gameObject.layer = LayerMask.NameToLayer("Dashing");
+        
+        float originalGravity = rb.gravityScale;
+        rb.gravityScale = 0;
+        rb.velocity = new Vector2(transform.localScale.x * dashForce * Input.GetAxis("Horizontal"), 0f);
+
+        // Dash duration
+        yield return new WaitForSeconds(dashTime);
+        
+        // End of dash - reset state
+        gameObject.layer = LayerMask.NameToLayer("Player");
+        rb.gravityScale = originalGravity;
+        isDashing = false;
+
+        // Initialize the DashImage fill amount for cooldown
+        DashImage.fillAmount = 0f;
+        
+        // Start cooldown and fill the image over the dashCooldown period
+        float elapsedTime = 0f;
+        while (elapsedTime < dashCooldown)
         {
-            canDash = false;
-            isDashing = true;
-        
-            gameObject.layer = LayerMask.NameToLayer("Dashing");
-        
-            float originalGravity = rb.gravityScale;
-            rb.gravityScale = 0;
-            rb.velocity = new Vector2(transform.localScale.x * dashForce * Input.GetAxis("Horizontal"), 0f);
-
-            // Dash duration
-            yield return new WaitForSeconds(dashTime);
-        
-            // End of dash - reset state
-            gameObject.layer = LayerMask.NameToLayer("Player");
-            rb.gravityScale = originalGravity;
-            isDashing = false;
-
-            // Initialize the DashImage fill amount for cooldown
-            DashImage.fillAmount = 0f;
-        
-            // Start cooldown and fill the image over the dashCooldown period
-            float elapsedTime = 0f;
-            while (elapsedTime < dashCooldown)
-            {
-                elapsedTime += Time.deltaTime;
-                DashImage.fillAmount = Mathf.Clamp01(elapsedTime / dashCooldown);
-                yield return null;
-            }
-
-            // Ensure fill amount is set to 1 at the end of cooldown
-            DashImage.fillAmount = 1f;
-        
-            canDash = true;
+            elapsedTime += Time.deltaTime;
+            DashImage.fillAmount = Mathf.Clamp01(elapsedTime / dashCooldown);
+            yield return null;
         }
+
+        // Ensure fill amount is set to 1 at the end of cooldown
+        DashImage.fillAmount = 1f;
+        
+        canDash = true;
     }
+}
 
 
 
