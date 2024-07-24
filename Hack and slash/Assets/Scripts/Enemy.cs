@@ -6,14 +6,19 @@ public class Enemy : MonoBehaviour
 {
     public int health;
     [SerializeField] private ParticleSystem particleSystem = default;
+    [SerializeField] private ParticleSystem fireParticle = default;
+    [SerializeField] private ParticleSystem playerHitParticle;
+    
+    [SerializeField] private DamageFlash damageFlash = default; // Reference to DamageFlash script
     private SpriteRenderer spriteRenderer;
     private Collider2D _collider2D;
-    [SerializeField] private ParticleSystem fireParticle;
+    [SerializeField] private CameraShake cameraShake;
+
+
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         _collider2D = GetComponent<Collider2D>();
-        
     }
 
     void Update()
@@ -24,7 +29,15 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(int damage)
     {
         health -= damage;
-        Debug.Log("Enemey took damage. Current health: " + health);
+        cameraShake.ShakeCamera();
+        playerHitParticle.Play();
+        Debug.Log("Enemy took damage. Current health: " + health);
+
+        // Trigger the damage flash effect
+        if (damageFlash != null)
+        {
+            damageFlash.CallDamageFlash();
+        }
 
         if (health <= 0)
         {

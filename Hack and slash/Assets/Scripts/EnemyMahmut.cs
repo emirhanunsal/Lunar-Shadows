@@ -110,12 +110,7 @@ public class EnemyMahmut : MonoBehaviour
             if (playerHealth != null)
             {
                 playerHealth.TakeDamage(damage);
-                Debug.Log("Enemy attacked the player!");
             }
-        }
-        else
-        {
-            Debug.Log("Player moved out of range, attack missed.");
         }
 
         // Reset the time since the last hit and allow movement again

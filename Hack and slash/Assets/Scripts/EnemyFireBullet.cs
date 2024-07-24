@@ -30,14 +30,12 @@ public class EnemyFireBullet : MonoBehaviour
             if (playerHealth != null)
             {
                 playerHealth.TakeDamage(damage);
-                Debug.Log("Player hit by projectile!");
             }
             StartCoroutine(DestroyBullet());
         }
         // Check if the collided object is on the groundLayer
         else if (((1 << collision.gameObject.layer) & groundLayer) != 0)
         {
-            Debug.Log("Projectile hit the ground!");
             StartCoroutine(DestroyBullet());
         }
     }
