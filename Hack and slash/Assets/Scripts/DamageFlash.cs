@@ -48,7 +48,6 @@ public class DamageFlash : MonoBehaviour
             yield return null;
         }
 
-        // Ensure flash amount is set to 0 at the end
         SetFlashAmount(0f);
     }
 

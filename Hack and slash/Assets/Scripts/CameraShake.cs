@@ -4,7 +4,7 @@ using Cinemachine;
 
 public class CameraShake : MonoBehaviour
 {
-    private CinemachineVirtualCamera CinemachineVirtualCamera;
+    private CinemachineVirtualCamera cinemachineVirtualCamera;
     private CinemachineBasicMultiChannelPerlin cbmcp;
 
     [SerializeField] private float shakeIntensity;
@@ -12,26 +12,38 @@ public class CameraShake : MonoBehaviour
 
     private void Awake()
     {
-        CinemachineVirtualCamera = GetComponent<CinemachineVirtualCamera>();
-        cbmcp = CinemachineVirtualCamera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
+        cinemachineVirtualCamera = GetComponent<CinemachineVirtualCamera>();
+        if (cinemachineVirtualCamera != null)
+        {
+            cbmcp = cinemachineVirtualCamera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
+        }
         StopShake();
     }
 
     public void ShakeCamera()
     {
-        StopAllCoroutines();  // Stop any ongoing shake coroutine
-        StartCoroutine(Shake());
+        if (cinemachineVirtualCamera != null && cinemachineVirtualCamera.gameObject.activeInHierarchy)
+        {
+            StopAllCoroutines();
+            StartCoroutine(Shake());
+        }
     }
 
     private IEnumerator Shake()
     {
-        cbmcp.m_AmplitudeGain = shakeIntensity;
-        yield return new WaitForSeconds(shakeTime);
-        StopShake();
+        if (cbmcp != null)
+        {
+            cbmcp.m_AmplitudeGain = shakeIntensity;
+            yield return new WaitForSeconds(shakeTime);
+            StopShake();
+        }
     }
 
     public void StopShake()
     {
-        cbmcp.m_AmplitudeGain = 0f;
+        if (cbmcp != null)
+        {
+            cbmcp.m_AmplitudeGain = 0f;
+        }
     }
 }

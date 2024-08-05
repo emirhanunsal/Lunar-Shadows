@@ -1,5 +1,5 @@
 using System.Collections;
-using System.Net.Mime;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] private float speed = 5f;
     [SerializeField] private float jumpForce = 10f;
-    [SerializeField] private int maxJumps = 2; // Max number of jumps
+    [SerializeField] private int maxJumps = 2; 
     private int jumpCount;
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
@@ -20,25 +20,33 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float dashForce;
     [SerializeField] private float dashTime;
     [SerializeField] private float dashCooldown;
+    private PlayerHealth playerHealth;
+    private GameManager gameManager;
 
     public Image DashImage;
-    
 
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
-        originalGravityScale = rb.gravityScale; // Başlangıçta yerçekimini sakla
+        playerHealth = GetComponent<PlayerHealth>();
+        originalGravityScale = rb.gravityScale; 
+        gameManager = FindObjectOfType<GameManager>(); 
     }
 
     private void Update()
     {
+        if (playerHealth.isPlayerDead)
+        {
+            Die();
+            return;
+        }
         if (isDashing)
         {
             return;
         }
-        
+
         Move();
         Jump();
         if (canDash)
@@ -54,7 +62,7 @@ public class PlayerController : MonoBehaviour
         Vector2 movement = new Vector2(moveInput * speed, rb.velocity.y);
         rb.velocity = movement;
 
-        // Yön değiştirme
+      
         if (moveInput < 0)
         {
             spriteRenderer.flipX = true;
@@ -64,58 +72,56 @@ public class PlayerController : MonoBehaviour
             spriteRenderer.flipX = false;
         }
 
-        // Animator'da speed değerini güncelle
+        
         animator.SetFloat("Speed", Mathf.Abs(moveInput));
     }
 
     private IEnumerator Dash()
-{
-    if (Input.GetButtonDown("Dash") && canDash)
     {
-        canDash = false;
-        isDashing = true;
-        
-        gameObject.layer = LayerMask.NameToLayer("Dashing");
-        
-        float originalGravity = rb.gravityScale;
-        rb.gravityScale = 0;
-        rb.velocity = new Vector2(transform.localScale.x * dashForce * Input.GetAxis("Horizontal"), 0f);
-
-        // Dash duration
-        yield return new WaitForSeconds(dashTime);
-        
-        // End of dash - reset state
-        gameObject.layer = LayerMask.NameToLayer("Player");
-        rb.gravityScale = originalGravity;
-        isDashing = false;
-
-        // Initialize the DashImage fill amount for cooldown
-        DashImage.fillAmount = 0f;
-        
-        // Start cooldown and fill the image over the dashCooldown period
-        float elapsedTime = 0f;
-        while (elapsedTime < dashCooldown)
+        if (Input.GetButtonDown("Dash") && canDash)
         {
-            elapsedTime += Time.deltaTime;
-            DashImage.fillAmount = Mathf.Clamp01(elapsedTime / dashCooldown);
-            yield return null;
+            canDash = false;
+            isDashing = true;
+
+            gameObject.layer = LayerMask.NameToLayer("Dashing");
+
+            float originalGravity = rb.gravityScale;
+            rb.gravityScale = 0;
+            rb.velocity = new Vector2(transform.localScale.x * dashForce * Input.GetAxis("Horizontal"), 0f);
+
+            
+            yield return new WaitForSeconds(dashTime);
+
+           
+            gameObject.layer = LayerMask.NameToLayer("Player");
+            rb.gravityScale = originalGravity;
+            isDashing = false;
+
+            
+            DashImage.fillAmount = 0f;
+
+            
+            float elapsedTime = 0f;
+            while (elapsedTime < dashCooldown)
+            {
+                elapsedTime += Time.deltaTime;
+                DashImage.fillAmount = Mathf.Clamp01(elapsedTime / dashCooldown);
+                yield return null;
+            }
+
+          
+            DashImage.fillAmount = 1f;
+
+            canDash = true;
         }
-
-        // Ensure fill amount is set to 1 at the end of cooldown
-        DashImage.fillAmount = 1f;
-        
-        canDash = true;
     }
-}
-
-
 
     void Jump()
     {
         if (Input.GetButtonDown("Jump") && (isGrounded || jumpCount < maxJumps))
         {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce); // Set vertical velocity directly for consistent jump height
-            animator.SetBool("isJumping", true); // isJumping booleanını ayarla
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce); 
+            animator.SetBool("isJumping", true); 
             jumpCount++;
         }
     }
@@ -125,8 +131,8 @@ public class PlayerController : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = true;
-            animator.SetBool("isJumping", false); // Karakter yere inince isJumping'i false yap
-            jumpCount = 0; // Reset jump count when the player lands on the ground
+            animator.SetBool("isJumping", false); 
+            jumpCount = 0; 
         }
     }
 
@@ -141,5 +147,11 @@ public class PlayerController : MonoBehaviour
     private void UpdateAnimator()
     {
         animator.SetFloat("Speed", Mathf.Abs(rb.velocity.x));
+    }
+
+    public void Die()
+    {
+        playerHealth.isPlayerDead = true;
+        gameManager.OnPlayerDeath();
     }
 }

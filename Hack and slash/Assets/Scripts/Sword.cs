@@ -8,13 +8,17 @@ public class Sword : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private float timeBtwAttack;
     public float startTimeBtwAttack;
+    public PlayerHealth playerHealth;
+    public AudioSource hitAudio;
+
+    
 
     public Transform attackPos;
     public float attackRange;
     public LayerMask whatIsEnemies;
     public int damage;
 
-    // Adjust the attack offset to flip the attack position
+   
     public Vector3 attackOffsetRight;
     public Vector3 attackOffsetLeft;
 
@@ -26,6 +30,12 @@ public class Sword : MonoBehaviour
 
     void Update()
     {
+        if (playerHealth.isPlayerDead)
+        {
+            return;
+        }
+        
+        
         if (timeBtwAttack <= 0)
         {
             if (Input.GetButtonDown("Attack"))
@@ -36,9 +46,11 @@ public class Sword : MonoBehaviour
                 {
                     Enemy enemy = enemiesToDamage[i].GetComponent<Enemy>();
                     if (enemy != null)
-                    {
+                    {   
                         enemy.TakeDamage(damage);
+                        hitAudio.Play();
                     }
+                    
                 }
                 timeBtwAttack = startTimeBtwAttack;
             }
@@ -48,7 +60,7 @@ public class Sword : MonoBehaviour
             timeBtwAttack -= Time.deltaTime;
         }
 
-        // Flip the sword based on the player's horizontal movement
+        
         float moveInput = Input.GetAxis("Horizontal");
         if (moveInput < 0)
         {

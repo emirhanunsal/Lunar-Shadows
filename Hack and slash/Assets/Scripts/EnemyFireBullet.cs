@@ -23,7 +23,7 @@ public class EnemyFireBullet : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D collision)
     {
-        // Check if the collided object is on the playerLayer
+        
         if (((1 << collision.gameObject.layer) & playerLayer) != 0)
         {
             PlayerHealth playerHealth = collision.GetComponent<PlayerHealth>();
@@ -33,7 +33,7 @@ public class EnemyFireBullet : MonoBehaviour
             }
             StartCoroutine(DestroyBullet());
         }
-        // Check if the collided object is on the groundLayer
+        
         else if (((1 << collision.gameObject.layer) & groundLayer) != 0)
         {
             StartCoroutine(DestroyBullet());
@@ -42,16 +42,16 @@ public class EnemyFireBullet : MonoBehaviour
     
     private IEnumerator DestroyBullet()
     {
-        // Play particle effect
+        
         particleSystem.Play();
         _collider2D.enabled = false;
-        // Disable SpriteRenderer
+      
         spriteRenderer.enabled = false;
 
-        // Wait for 1.5 seconds
+        
         yield return new WaitForSeconds(1.5f);
 
-        // Destroy the enemy GameObject
+        
         Destroy(gameObject);
     }
 }
